@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/team_graph"
+    app:startDestination="@id/displayTeamsFragment">
+
+    <fragment
+        android:id="@+id/displayTeamsFragment"
+        android:name="com.olgunyilmaz.teamlegacy.view.DisplayTeamsFragment"
+        android:label="fragment_display_teams"
+        tools:layout="@layout/fragment_display_teams" >
+        <action
+            android:id="@+id/action_displayTeamsFragment_to_teamDetailsFragment"
+            app:destination="@id/teamDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/teamDetailsFragment"
+        android:name="com.olgunyilmaz.teamlegacy.view.TeamDetailsFragment"
+        android:label="fragment_team_details"
+        tools:layout="@layout/fragment_team_details" >
+        <action
+            android:id="@+id/action_teamDetailsFragment_to_displayTeamsFragment"
+            app:destination="@id/displayTeamsFragment" />
+    </fragment>
+</navigation>
