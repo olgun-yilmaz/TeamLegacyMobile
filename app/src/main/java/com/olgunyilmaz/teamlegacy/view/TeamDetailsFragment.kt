@@ -21,8 +21,14 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.Navigation
 import androidx.navigation.Navigator
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.google.android.material.snackbar.Snackbar
+import com.olgunyilmaz.teamlegacy.R
 import com.olgunyilmaz.teamlegacy.databinding.FragmentTeamDetailsBinding
+import com.olgunyilmaz.teamlegacy.roomdb.TeamDao
+import com.olgunyilmaz.teamlegacy.roomdb.TeamDatabase
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 
 class TeamDetailsFragment : Fragment() {
@@ -33,6 +39,12 @@ class TeamDetailsFragment : Fragment() {
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var permissionLauncher: ActivityResultLauncher<String>
 
+    private lateinit var db : TeamDatabase
+    private lateinit var teamDao: TeamDao
+    private lateinit var compositeDisposable: CompositeDisposable
+
+    private var info : String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -42,6 +54,7 @@ class TeamDetailsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
+        info = arguments?.getString("info")
         binding = FragmentTeamDetailsBinding.inflate(inflater,container,false)
         val view = binding.root
         return view
@@ -50,11 +63,30 @@ class TeamDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         registerLauncher()
-        binding.saveButton.setOnClickListener {
-            save(it)
-        }
-        binding.imageView.setOnClickListener {
-            selectImage(it)
+        fragmentManager = requireActivity().supportFragmentManager
+
+        compositeDisposable = CompositeDisposable()
+
+        db = activity?.let { activity -> Room.databaseBuilder(activity.applicationContext,TeamDatabase :: class.java,"Teams").build() }!!
+        teamDao = db.teamDao()
+
+        if (info.equals("old")){
+            binding.deleteButton.visibility = View.VISIBLE
+            binding.saveButton.visibility = View.GONE
+
+            binding.deleteButton.setOnClickListener {
+                delete(it)
+            }
+        }else{
+            binding.deleteButton.visibility = View.GONE
+            binding.saveButton.visibility = View.VISIBLE
+
+            binding.saveButton.setOnClickListener {
+                save(it)
+            }
+            binding.imageView.setOnClickListener {
+                selectImage(it)
+            }
         }
     }
 
@@ -68,8 +100,11 @@ class TeamDetailsFragment : Fragment() {
     }
 
     private fun save(view: View) {
-        val action = TeamDetailsFragmentDirections.actionTeamDetailsFragmentToDisplayTeamsFragment()
-        Navigation.findNavController(view).navigate(action)
+        backToDisplayFragment()
+    }
+
+    private fun delete(view : View){
+        backToDisplayFragment()
     }
 
     private fun requestPermission(view : View, permission : String){
@@ -91,6 +126,12 @@ class TeamDetailsFragment : Fragment() {
     private fun goToGallery(){
         val intentToGalley = Intent(Intent.ACTION_PICK,MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         activityResultLauncher.launch(intentToGalley)
+    }
+
+    private fun backToDisplayFragment(){
+        val fragmentTransaction = fragmentManager.beginTransaction()
+        val displayTeamsFragment = DisplayTeamsFragment()
+        fragmentTransaction.replace(R.id.fragmentContainerView,displayTeamsFragment).commit()
     }
 
     private fun registerLauncher(){

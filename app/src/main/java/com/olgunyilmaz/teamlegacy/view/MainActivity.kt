@@ -28,14 +28,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(item.itemId == R.id.add_team){
-            goToAddTeamFragment()
+            goToAddTeamFragment("new")
         }
         return super.onOptionsItemSelected(item)
     }
 
-    private fun goToAddTeamFragment(){
+    private fun goToAddTeamFragment(info : String){
         val fragmentTransaction = fragmentManager.beginTransaction()
         val addTeamsFragment = TeamDetailsFragment()
+
+        val bundle = Bundle()
+        bundle.putString("info",info)
+        addTeamsFragment.arguments = bundle
+
         fragmentTransaction.replace(R.id.fragmentContainerView,addTeamsFragment).commit()
     }
 }

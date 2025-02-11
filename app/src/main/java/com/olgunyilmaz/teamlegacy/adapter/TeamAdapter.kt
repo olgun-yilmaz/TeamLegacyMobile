@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.olgunyilmaz.teamlegacy.databinding.RecyclerRowBinding
 import com.olgunyilmaz.teamlegacy.model.Team
 
-class TeamAdapter (val teamList : ArrayList<Team>) : RecyclerView.Adapter <TeamAdapter.TeamHolder>() {
+class TeamAdapter (val teamList : List<Team>) : RecyclerView.Adapter <TeamAdapter.TeamHolder>() {
     class TeamHolder(val binding : RecyclerRowBinding) : RecyclerView.ViewHolder(binding.root) {
 
     }
