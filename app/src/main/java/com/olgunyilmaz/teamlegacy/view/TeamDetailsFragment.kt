@@ -5,6 +5,7 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
@@ -19,10 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
-import androidx.navigation.Navigation
-import androidx.navigation.Navigator
 import androidx.room.Room
-import androidx.room.RoomDatabase
 import com.google.android.material.snackbar.Snackbar
 import com.olgunyilmaz.teamlegacy.R
 import com.olgunyilmaz.teamlegacy.databinding.FragmentTeamDetailsBinding
@@ -33,7 +31,6 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.io.ByteArrayOutputStream
-import java.io.OutputStream
 
 
 class TeamDetailsFragment : Fragment() {
@@ -78,6 +75,18 @@ class TeamDetailsFragment : Fragment() {
         if (info.equals("old")){
             binding.deleteButton.visibility = View.VISIBLE
             binding.saveButton.visibility = View.GONE
+
+            val selectedTeam  = arguments?.getSerializable("selectedTeam") as? Team
+            selectedTeam?.let {
+                binding.nameText.setText(selectedTeam.name)
+                binding.aboutText.setText(selectedTeam.about)
+                binding.yearText.setText(selectedTeam.year.toInt().toString())
+
+                val byteArray = selectedTeam.image
+                val bitmap = BitmapFactory.decodeByteArray(byteArray,0,byteArray.size)
+
+                binding.imageView.setImageBitmap(bitmap)
+            }
 
             binding.deleteButton.setOnClickListener {
                 delete(it)
