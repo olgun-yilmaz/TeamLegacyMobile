@@ -89,7 +89,7 @@ class TeamDetailsFragment : Fragment() {
             }
 
             binding.deleteButton.setOnClickListener {
-                delete(it)
+                delete(view = it,team = selectedTeam!!)
             }
         }else{
             binding.deleteButton.visibility = View.GONE
@@ -162,8 +162,17 @@ class TeamDetailsFragment : Fragment() {
         return Bitmap.createScaledBitmap(image,width,height,true)
     }
 
-    private fun delete(view : View){
-        handleResponse()
+    private fun delete(view : View, team : Team){
+        try{
+            compositeDisposable.add(
+                teamDao.delete(team)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(this@TeamDetailsFragment :: handleResponse)
+            )
+        }catch (e : Exception){
+            Toast.makeText(requireActivity(),e.localizedMessage,Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun requestPermission(view : View, permission : String){
