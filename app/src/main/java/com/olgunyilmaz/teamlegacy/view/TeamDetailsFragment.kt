@@ -26,15 +26,19 @@ import androidx.room.RoomDatabase
 import com.google.android.material.snackbar.Snackbar
 import com.olgunyilmaz.teamlegacy.R
 import com.olgunyilmaz.teamlegacy.databinding.FragmentTeamDetailsBinding
+import com.olgunyilmaz.teamlegacy.model.Team
 import com.olgunyilmaz.teamlegacy.roomdb.TeamDao
 import com.olgunyilmaz.teamlegacy.roomdb.TeamDatabase
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.schedulers.Schedulers
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 
 
 class TeamDetailsFragment : Fragment() {
     private lateinit var binding: FragmentTeamDetailsBinding
     private lateinit var fragmentManager: FragmentManager
-    private lateinit var selectedBitmap : Bitmap
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var permissionLauncher: ActivityResultLauncher<String>
@@ -44,6 +48,7 @@ class TeamDetailsFragment : Fragment() {
     private lateinit var compositeDisposable: CompositeDisposable
 
     private var info : String? = null
+    private var selectedBitmap : Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,11 +105,56 @@ class TeamDetailsFragment : Fragment() {
     }
 
     private fun save(view: View) {
-        backToDisplayFragment()
+        if (selectedBitmap == null){
+            Toast.makeText(requireActivity().applicationContext,"You must choose a picture!",Toast.LENGTH_LONG).show()
+        }else {
+            val smallImg = makeImageSmaller(selectedBitmap!!, 300)
+            val outputStream = ByteArrayOutputStream()
+            smallImg.compress(Bitmap.CompressFormat.PNG, 50, outputStream)
+            val byteArray = outputStream.toByteArray()
+
+            val teamName = binding.nameText.text.toString()
+            val aboutText = binding.aboutText.text.toString()
+            var year = binding.yearText.text.toString().toDoubleOrNull()
+
+            if (year == null) {
+                year = 0.0
+            }
+
+            val team = Team(teamName, aboutText, year, byteArray)
+
+            try{
+                compositeDisposable.add(
+                    teamDao.insert(team)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(this@TeamDetailsFragment :: handleResponse)
+                )
+
+            }catch (e : Exception){
+                Toast.makeText(requireActivity(),e.localizedMessage,Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun makeImageSmaller(image : Bitmap, maxSize : Int) : Bitmap{
+        var width = image.width
+        var height = image.height
+        val ratio = width.toDouble()/height.toDouble()
+
+        if(ratio>=1){ //landscape
+            width = maxSize
+            height = (width.toDouble() / ratio).toInt()
+        }else{ //portrait
+            height = maxSize
+            width = (height.toDouble() * ratio).toInt()
+        }
+
+        return Bitmap.createScaledBitmap(image,width,height,true)
     }
 
     private fun delete(view : View){
-        backToDisplayFragment()
+        handleResponse()
     }
 
     private fun requestPermission(view : View, permission : String){
@@ -128,7 +178,7 @@ class TeamDetailsFragment : Fragment() {
         activityResultLauncher.launch(intentToGalley)
     }
 
-    private fun backToDisplayFragment(){
+    private fun handleResponse(){
         val fragmentTransaction = fragmentManager.beginTransaction()
         val displayTeamsFragment = DisplayTeamsFragment()
         fragmentTransaction.replace(R.id.fragmentContainerView,displayTeamsFragment).commit()
